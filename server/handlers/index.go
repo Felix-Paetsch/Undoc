@@ -9,7 +9,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		Title   string
 		Content string
 	}{
-		Title:   "Home Page",
+		Title:   "Undoc",
 		Content: "Welcome to our website!",
 	}
 

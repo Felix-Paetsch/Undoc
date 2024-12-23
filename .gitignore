@@ -1,5 +1,6 @@
 tmp
 node_modules
-./server/static/css/output.css
+server/static/css/output.css
 
 Docs
+package-lock.json
