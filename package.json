@@ -1,0 +1,12 @@
+{
+    "dependencies": {
+        "tailwindcss": "^3.4.17",
+        "yaml": "^2.6.1"
+    },
+    "scripts": {
+        "go_air": "air", // Runs the 'air' tool for live-reloading Go apps
+        "go": "go run main.go", // Compiles and runs 'main.go'
+        "precompiled": "./main", // Runs the precompiled binary (make sure 'main' is built first)
+        "tailwind": "npx tailwindcss -i ./server/static/css/tailwind.css -o ./server/static/css/output.css --watch" // Builds Tailwind CSS with watch mode
+    }
+}
