@@ -1,13 +1,12 @@
 package handlers
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
 	"path/filepath"
 )
 
-// renderTemplate takes any number of template filenames (relative to server/pages).
-// It loads them all and executes the "full_layout" template.
 func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
 	// If no templates were provided, return an error
 	if len(tmpl) == 0 {
@@ -21,8 +20,22 @@ func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
 		paths = append(paths, filepath.Join("server/pages", file))
 	}
 
+	// Define a helper function to convert data to JSON
+	toJSON := func(data interface{}) string {
+		bytes, err := json.Marshal(data)
+		if err != nil {
+			return "[]" // Fallback to empty array
+		}
+		return string(bytes)
+	}
+
+	// Create a new template and register the "json" function
+	tmplFunc := template.New("").Funcs(template.FuncMap{
+		"json": toJSON,
+	})
+
 	// Parse all the template files
-	templates, err := template.ParseFiles(paths...)
+	templates, err := tmplFunc.ParseFiles(paths...)
 	if err != nil {
 		http.Error(w, "Template parsing error: "+err.Error(), http.StatusInternalServerError)
 		return

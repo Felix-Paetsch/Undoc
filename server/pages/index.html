@@ -5,46 +5,63 @@
     <title>{{.Title}}</title>
     <link rel="stylesheet" href="/static/css/output.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 </head>
 <body class="bg-neutral-900 flex justify-center">
     <div class="w-full">
         <header>
             <nav class="w-full bg-red-500 text-white p-4 flex justify-center">
                 <div class="w-full max-w-[80rem] flex items-center">
-                    <input type="text" placeholder="Search..." class="p-2 rounded w-full text-neutral-900">
-                    <button class="ml-2 p-2 w-12 bg-neutral-900 text-white rounded">
-                        <i class="fas fa-search"></i>
-                    </button>
+                  <input type="text"
+                         name="current_query"
+                         placeholder="Search..."
+                         class="p-2 rounded w-full text-neutral-900"
+                         hx-post="/search"
+                         hx-trigger="keyup changed delay:300ms, keyup[keyCode==13]"
+                         hx-include="[name='current_query'], [name='current_tags']" />
+              
+                  <button class="ml-2 p-2 w-12 bg-neutral-900 text-white rounded"
+                          hx-post="/search"
+                          hx-trigger="click"
+                          hx-include="[name='current_query'], [name='current_tags']">
+                    <i class="fas fa-search"></i>
+                  </button>
                 </div>
-            </nav>
-        </header>
-        <div class="w-full flex justify-center p-4">
-            <div class="w-full max-w-[80rem]">
-                <div class="flex items-center">
-                    <input type="text" placeholder="Tags..." class="p-2 rounded text-neutral-900">
-                    <div class="border-b border-neutral-700 flex-grow mx-4 min-w-[4rem]"></div>
-                    <div class="flex gap-4 flex-wrap">
-                        <span class="bg-neutral-800 text-white px-3 py-1 rounded whitespace-nowrap">class (5)</span>
-                        <span class="bg-neutral-800 text-white px-3 py-1 rounded whitespace-nowrap">method (4)</span>
-                        <span class="bg-neutral-800 text-white px-3 py-1 rounded whitespace-nowrap">variable (3)</span>
-                        <span class="bg-neutral-800 text-white px-3 py-1 rounded whitespace-nowrap">interface (2)</span>
-                        <span class="bg-neutral-800 text-white px-3 py-1 rounded whitespace-nowrap">enum (1)</span>
+            </nav>              
+            <div class="w-full flex justify-center p-4">
+                <div class="w-full max-w-[80rem]">
+                    <div class="flex items-center">
+                        <input type="text" 
+                            placeholder="Tags..." 
+                            class="p-2 rounded text-neutral-900" 
+                            name="new_tag"
+                            id="tag_input"
+                            hx-post="/tagPost"
+                            hx-trigger="keyup[keyCode==13]" 
+                            hx-include="[name='new_tag'], [name='current_tags'], [name='current_query']"
+                            hx-on::after-request="this.value = ''" />
+                        
+                        <input type="hidden" name="current_tags" id="current_tags_hidden" value='[]' />
+                        <div class="border-b border-neutral-700 flex-grow mx-4 min-w-[4rem]"></div>
+                        <div class="flex gap-4 flex-wrap" id="current_tags">
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
+        <h2 class="w-full bg-purple-500 p-5 text-white mt-4 pl-20" id="query_text">(Query Text)</h2>
         <div class="w-full flex justify-center p-4">
             <div class="h-screen w-full max-w-[80rem] ">
 
                 <div class="pt-10 text-white">
-                    <h2 class="flex flex-row"><span class="text-3xl font-bold text-red-500 block leading-10">#</span> <span class="text-xl pl-2 block leading-10">Text found inside title</span></h2>
+                    <h2 class="flex flex-row"><span class="text-3xl font-bold text-red-500 block leading-10">#</span> <span class="text-xl pl-2 block leading-10">Search found inside title</span></h2>
                     <h3 class="text-l font-bold hover:text-red-500 cursor-pointer p-1 pl-4 mt-2 border-l-2 border-neutral-800"><a href="#">`Geometry.get_by_line(&lt;>)`</a></h3>
                     <h3 class="text-l font-bold hover:text-red-500 cursor-pointer p-1 pl-4 mt-2 border-l-2 border-neutral-800"><a href="#">Geometry</a></h3>
                     <h3 class="text-l font-bold hover:text-red-500 cursor-pointer p-1 pl-4 mt-2 border-l-2 border-neutral-800"><a href="#">Some veryyyy long title</a></h3>
                 </div>
     
                 <div class="pt-10 text-white">
-                    <h2 class="flex flex-row"><span class="text-3xl font-bold text-red-500 block leading-10">#</span> <span class="text-xl pl-2 block leading-10">Text found inside content</span></h2>
+                    <h2 class="flex flex-row"><span class="text-3xl font-bold text-red-500 block leading-10">#</span> <span class="text-xl pl-2 block leading-10">Search found inside content</span></h2>
                     <h3 class="text-l font-bold hover:text-red-500 cursor-pointer p-1 pl-4 mt-2 border-l-2 border-neutral-800"><a href="#">`Geometry.get_by_line(&lt;>)`</a></h3>
                     <h3 class="text-l font-bold hover:text-red-500 cursor-pointer p-1 pl-4 mt-2 border-l-2 border-neutral-800"><a href="#">Geometry</a></h3>
                     <h3 class="text-l font-bold hover:text-red-500 cursor-pointer p-1 pl-4 mt-2 border-l-2 border-neutral-800"><a href="#">Some veryyyy long title</a></h3>

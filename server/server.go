@@ -14,6 +14,9 @@ func Start() {
 
 	// Routes
 	http.HandleFunc("/", handlers.IndexHandler)
+	http.HandleFunc("/tagPost", handlers.TagPostHandler)
+	http.HandleFunc("/tagDelete", handlers.TagDeleteHandler)
+	http.HandleFunc("/search", handlers.SearchHandler)
 
 	fmt.Println("Starting server on http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
