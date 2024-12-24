@@ -5,7 +5,8 @@ module.exports = {
         "./server/static/**/*.js"
     ],
     theme: {
-        extend: {},
+        extend: {
+        },
     },
     plugins: [],
 }
