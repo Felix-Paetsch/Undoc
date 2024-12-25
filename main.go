@@ -13,18 +13,26 @@ import (
 )
 
 func main() {
-	docsFolder := "./Docs"
+	// Check if an argument is provided
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: main.exe <docs-folder>")
+		os.Exit(1)
+	}
+
+	// Use the provided folder as input
+	docsFolder := os.Args[1]
 
 	info, err := os.Stat(docsFolder)
 	if os.IsNotExist(err) || !info.IsDir() {
-		fmt.Println("Folder './Docs' not found or is not a directory.")
+		fmt.Printf("Folder '%s' not found or is not a directory.\n", docsFolder)
 		os.Exit(1)
 	}
 
 	// Initialize search storage
 	docStore := search.NewSearchableDoc()
 
-	filepath.Walk(docsFolder, func(path string, info os.FileInfo, err error) error {
+	// Walk through the given folder
+	err = filepath.Walk(docsFolder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -50,6 +58,11 @@ func main() {
 		return nil
 	})
 
+	if err != nil {
+		log.Fatalf("Error walking the folder: %v\n", err)
+	}
+
+	// Start server with the docStore
 	srv := &server.Server{DocStore: docStore}
 	srv.Start()
 }
