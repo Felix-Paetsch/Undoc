@@ -4,29 +4,105 @@
 <head>
     <title>{{.Title}}</title>
     <link rel="stylesheet" href="/static/css/output.css">
+    <link rel="stylesheet" href="/static/css/doc.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/md.min.js"></script>
-
-    <script>hljs.highlightAll();</script>
+    
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="/static/highlight/styles/base16/hardcore.css">
+    <script src="/static/highlight/highlight.min.js"></script>
+    <script src="/static/highlight/languages/markdown.min.js"></script>
+    <script src="/static/highlight/languages/javascript.min.js"></script>
+    <script src="/static/highlight/languages/css.min.js"></script>
+    <script src="/static/highlight/languages/go.min.js"></script>
+    <script src="/static/highlight/languages/xml.min.js"></script>
+    <script src="/static/highlight/languages/json.min.js"></script>
 </head>
-<body class="bg-neutral-900 flex justify-center">
+<body class="bg-neutral-900 flex justify-center text-white">
     <div class="w-full">
         <header>
             <nav class="w-full bg-red-500 text-white p-4 flex justify-center">
                 <div class="w-full max-w-[80rem] flex items-center">
                     <a href="/" class="flex items-center text-white hover:text-gray-300">
-                        <i class="fas fa-angle-left mr-1 mt-1 text-3xl "></i>
-                        <i class="fas fa-angle-left mr-2 mt-1 text-3xl "></i>
-                        <span class="text-3xl ml-2">Back</span>
+                        <i class="fas fa-angle-left mt-1 text-3xl"></i>
+                        <i class="fas fa-angle-left mr-2 mt-1 text-3xl"></i>
+                        <span class="text-3xl ml-2">{{ .Title }}</span>
                     </a>
                 </div>
             </nav>
         </header>
-        <pre><code class="language-md">{{.SrcText}}</code></pre>
+        <!-- Markdown Source Block -->
+        <main class="w-full flex justify-center pt-5 pb-10">
+            <div class="w-full max-w-[80rem]">
+                <p class="w-full mb-5 text-gray-500">{{ replace .FilePath "\\" "/" }}</p>
+                <div class="w-full">
+                    <div class="overflow-x-auto w-full"><pre><code class="language-md">{{.SrcText}}</code></pre></div>
+                </div>
+            </div>
+        </main>
     </div>
+    
+    <!-- Highlight.js Script -->
+    <script>
+        // Highlight all blocks initially
+        hljs.highlightAll();
+
+        // Process blocks after Highlight.js is done
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => { // Ensure highlightAll has finished
+                document.querySelectorAll('.hljs-code').forEach(block => {
+                    let code = block.innerText.trim(); // Get content
+                    let language = '';
+
+                    // Match language from the first line
+                    const match = code.match(/^```(\w+)/);
+                    if (match) {
+                        language = match[1]; // Extract language type
+                    }
+
+                    // If language matches, process further
+                    if (['js', 'javascript', 'json', 'go', 'css'].includes(language)) {
+                        // Split lines
+                        const lines = code.split('\n');
+                        if (lines.length < 2) {
+                            return; // Skip processing if not enough lines
+                        }
+
+                        // Capture first and last lines
+                        const firstLine = lines.shift(); // Remove first line
+                        const lastLine = lines.pop();   // Remove last line
+
+                        // Update the inner content with processed code
+                        const cleanedCode = lines.join('\n');
+                        block.textContent = ''; // Clear the block
+
+                        // Add back the first line with hljs-string styling
+                        const firstSpan = document.createElement('span');
+                        firstSpan.classList.add('hljs-string');
+                        firstSpan.textContent = firstLine + '\n';
+                        block.appendChild(firstSpan);
+
+                        // Add the cleaned code
+                        const codeElement = document.createElement('code');
+                        codeElement.textContent = cleanedCode;
+                        block.appendChild(codeElement);
+
+                        // Add back the last line with hljs-string styling
+                        const lastSpan = document.createElement('span');
+                        lastSpan.classList.add('hljs-string');
+                        lastSpan.textContent = '\n' + lastLine;
+                        block.appendChild(lastSpan);
+
+                        // Set language class dynamically
+                        block.classList.remove('hljs-code');
+                        block.classList.add(`language-${language}`);
+
+                        // Re-highlight the cleaned block
+                        hljs.highlightElement(codeElement);
+                    }
+                });
+            }, 50); // Small delay to ensure initial highlighting completes
+        });
+    </script>
 </body>
 </html>
 {{end}}

@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strings"
 	"undoc/parse/tokenizer"
 )
 
@@ -77,31 +78,40 @@ func (p *Parser) Parse() (DocFile, error) {
 		p.consume()
 	}
 
-	// 6) Expect '{' (TokenTagStart)
-	tagOpen := p.consume()
-	if tagOpen.Type != tokenizer.TokenTagStart {
-		return DocFile{}, p.ErrorOut("Expected '{' to start tag list", tagOpen.Line)
-	}
+	// 6) Handle optional tag section
+	if p.current().Type == tokenizer.TokenTagStart { // Tag section begins
+		p.consume() // Consume '{'
 
-	// 7) Parse at least one tag, separated by commas, until we hit TokenTagEnd
-	tags, err := p.parseTags()
-	if err != nil {
-		return DocFile{}, err
-	}
-	doc.Tags = tags
-
-	// 8) After '}', skip whitespace/newlines but enforce at least ONE newline
-	foundNewLine := false
-	for p.current().Type == tokenizer.TokenWhitespace || p.current().Type == tokenizer.TokenNL {
-		if p.current().Type == tokenizer.TokenNL {
-			foundNewLine = true
+		// Check if immediately closed
+		if p.current().Type == tokenizer.TokenTagEnd {
+			p.consume()           // Consume '}'
+			doc.Tags = []string{} // Empty tags
+		} else {
+			// Parse tags
+			tags, err := p.parseTags()
+			if err != nil {
+				return DocFile{}, err
+			}
+			doc.Tags = tags
 		}
-		p.consume()
-	}
-	if !foundNewLine {
-		return DocFile{}, p.ErrorOut("Expected newline after '}'", p.current().Line)
+
+		// Require newline after tags
+		foundNewLine := false
+		for p.current().Type == tokenizer.TokenWhitespace || p.current().Type == tokenizer.TokenNL || p.current().Type == tokenizer.TokenEOF {
+			if p.current().Type == tokenizer.TokenNL || p.current().Type == tokenizer.TokenEOF {
+				foundNewLine = true
+			}
+			p.consume()
+		}
+		if !foundNewLine {
+			return DocFile{}, p.ErrorOut("Expected newline after '}'", p.current().Line)
+		}
+	} else {
+		// No tag boundaries; treat as zero tags
+		doc.Tags = []string{}
 	}
 
+	// 7) Parse remaining content
 	var content string
 	for p.current().Type != tokenizer.TokenEmpty {
 		content += p.consume().Src
@@ -114,44 +124,54 @@ func (p *Parser) Parse() (DocFile, error) {
 
 func (p *Parser) parseTags() ([]string, error) {
 	var tags []string
-	foundAtLeastOne := false
+	seen := make(map[string]bool) // Track unique tags
 
 	var last_tag_line = p.current().Line
 	for {
+		// Skip whitespace and newlines
 		for p.current().Type == tokenizer.TokenWhitespace || p.current().Type == tokenizer.TokenNL {
 			p.consume()
 		}
 
+		// Check for end of tag list
 		if p.current().Type == tokenizer.TokenTagEnd {
-			closing := p.consume()
-			if !foundAtLeastOne {
-				return nil, p.ErrorOut("At least one tag required before '}'", closing.Line)
-			}
+			p.consume()
 			return tags, nil
 		}
 
+		// Validate the tag type
 		if p.current().Type != tokenizer.TokenTag {
 			return nil, p.ErrorOut("Expected Tag or '}'", p.current().Line)
 		}
 
+		// Process the tag
 		tag := p.consume()
-		tags = append(tags, tag.Value)
-		foundAtLeastOne = true
+		normalizedTag := strings.TrimSpace(strings.ToLower(tag.Value)) // Normalize tag
+
+		// Add tag only if it's unique
+		if !seen[normalizedTag] {
+			tags = append(tags, tag.Value) // Preserve original formatting
+			seen[normalizedTag] = true     // Mark as seen
+		}
 		last_tag_line = tag.Line
 
+		// Skip trailing whitespace/newlines
 		for p.current().Type == tokenizer.TokenWhitespace || p.current().Type == tokenizer.TokenNL {
 			p.consume()
 		}
 
+		// Handle tag separators
 		if p.current().Type == tokenizer.TokenTagSeperator {
 			p.consume()
 			continue
 		}
 
+		// Handle tag end
 		if p.current().Type == tokenizer.TokenTagEnd {
 			continue
 		}
 
+		// Error if unexpected token appears
 		return nil, p.ErrorOut("Expected ',' or '}' after tag", last_tag_line)
 	}
 }
