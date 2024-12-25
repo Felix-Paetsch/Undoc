@@ -1,15 +1,16 @@
 {
     "dependencies": {
         "browser-sync": "^3.0.3",
-        "tailwindcss": "^3.4.17",
         "yaml": "^2.6.1"
     },
     "scripts": {
         "go_air": "air",
         "tailwind": "npx tailwindcss -i ./server/static/css/tailwind.css -o ./server/static/css/output.css --watch",
         "browser-sync": "browser-sync start --proxy http://localhost:8080 --files ',**/*.html,**/*.css,**/*.js' --no-notify --no-open --port 8081\"",
-        
         "go": "go run main.go",
         "precompiled": "./main"
+    },
+    "devDependencies": {
+        "tailwindcss": "^3.4.17"
     }
 }

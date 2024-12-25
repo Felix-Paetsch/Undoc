@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"undoc/parse/parser"
+	"undoc/search"
 )
 
-func TagDeleteHandler(w http.ResponseWriter, r *http.Request) {
+// TagDeleteHandler handles deleting tags and updating search results
+func TagDeleteHandler(w http.ResponseWriter, r *http.Request, docStore *search.SearchableDoc) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -39,15 +42,22 @@ func TagDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Perform search with updated tags
+	titleMatches, contentMatches := docStore.Search(query, filteredTags)
+
 	// Prepare data for rendering
 	data := struct {
-		Tags  []string
-		Query string
+		Tags           []string
+		Query          string
+		TitleMatches   []parser.DocFile
+		ContentMatches []parser.DocFile
 	}{
-		Tags:  filteredTags,
-		Query: query,
+		Tags:           filteredTags,
+		Query:          query,
+		TitleMatches:   titleMatches,
+		ContentMatches: contentMatches,
 	}
 
-	// Render updated tags
+	// Render updated tags and search results
 	renderTemplate(w, data, "htmx_responses/update_tags.html", "htmx_responses/partials/query_actions.html")
 }

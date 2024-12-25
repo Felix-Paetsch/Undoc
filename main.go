@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"undoc/parse"
+	"undoc/search"
 	"undoc/server"
 )
 
@@ -19,6 +20,9 @@ func main() {
 		fmt.Println("Folder './Docs' not found or is not a directory.")
 		os.Exit(1)
 	}
+
+	// Initialize search storage
+	docStore := search.NewSearchableDoc()
 
 	filepath.Walk(docsFolder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -39,10 +43,13 @@ func main() {
 				log.Fatalf("\n\n%s\n", parseErr.Error())
 			}
 
+			// Add document to searchable store
+			docStore.AddDoc(doc)
 			fmt.Printf("Parsed doc for '%s': %+v\n", path, doc.Title)
 		}
 		return nil
 	})
 
-	server.Start()
+	srv := &server.Server{DocStore: docStore}
+	srv.Start()
 }

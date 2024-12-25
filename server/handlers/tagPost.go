@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"undoc/parse/parser"
+	"undoc/search"
 )
 
+// filterTags ensures uniqueness, trims spaces, and converts tags to lowercase
 func filterTags(input []string) []string {
 	seen := make(map[string]bool)
 	var result []string
 	for _, v := range input {
-		v = strings.TrimSpace(strings.ToLower(v)) // Fixes trim() and toLowerCase()
-		if !seen[v] && v != "" {                  // Checks for duplicates and ignores empty strings
+		v = strings.TrimSpace(strings.ToLower(v)) // Normalize tags
+		if !seen[v] && v != "" {                  // Avoid duplicates and empty strings
 			seen[v] = true
 			result = append(result, v)
 		}
@@ -20,24 +23,25 @@ func filterTags(input []string) []string {
 	return result
 }
 
-func TagPostHandler(w http.ResponseWriter, r *http.Request) {
+// TagPostHandler adds a new tag and updates search results
+func TagPostHandler(w http.ResponseWriter, r *http.Request, docStore *search.SearchableDoc) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Parse the form data
+	// Parse form data
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
-	// Log all form parameters
+	// Log form parameters for debugging
 	for k, v := range r.Form {
 		fmt.Printf("%s: %v\n", k, v)
 	}
 
-	// Parse current_tags as JSON
+	// Parse current tags
 	var currentTags []string
 	currentTagsJSON := r.FormValue("current_tags")
 	if err := json.Unmarshal([]byte(currentTagsJSON), &currentTags); err != nil {
@@ -46,22 +50,29 @@ func TagPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract new tag and query
-	newTag := strings.ToLower(r.FormValue("new_tag"))
+	newTag := strings.TrimSpace(strings.ToLower(r.FormValue("new_tag")))
 	query := r.FormValue("current_query")
 
 	// Append the new tag and ensure uniqueness
 	tags := append(currentTags, newTag)
 	tags = filterTags(tags)
 
+	// Perform search with updated tags
+	titleMatches, contentMatches := docStore.Search(query, tags)
+
 	// Prepare data for rendering
 	data := struct {
-		Tags  []string
-		Query string
+		Tags           []string
+		Query          string
+		TitleMatches   []parser.DocFile
+		ContentMatches []parser.DocFile
 	}{
-		Tags:  tags,
-		Query: query,
+		Tags:           tags,
+		Query:          query,
+		TitleMatches:   titleMatches,
+		ContentMatches: contentMatches,
 	}
 
-	// Render updated tags
+	// Render updated tags and search results
 	renderTemplate(w, data, "htmx_responses/update_tags.html", "htmx_responses/partials/query_actions.html")
 }
