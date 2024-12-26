@@ -2,7 +2,8 @@ code .language-javascript code {
     padding: 0 !important;
 }
 
-.language-javascript span:last-child{
-    margin-top: -1.4rem;
-    display: inline-block;
-}
+.hljs {
+    white-space: pre-wrap; /* Preserves formatting and wraps code */
+    word-wrap: break-word; /* Ensures long words wrap properly */
+  }
+  

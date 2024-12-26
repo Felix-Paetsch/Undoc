@@ -8,7 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     
     <!-- Highlight.js -->
-    <link rel="stylesheet" href="/static/highlight/styles/base16/hardcore.css">
+    <link rel="stylesheet" href="/static/highlight/styles/base16/black-metal.css">
     <script src="/static/highlight/highlight.min.js"></script>
     <script src="/static/highlight/languages/markdown.min.js"></script>
     <script src="/static/highlight/languages/javascript.min.js"></script>
@@ -46,63 +46,61 @@
         // Highlight all blocks initially
         hljs.highlightAll();
 
+
+
         // Process blocks after Highlight.js is done
-        document.addEventListener("DOMContentLoaded", () => {
-            setTimeout(() => { // Ensure highlightAll has finished
-                document.querySelectorAll('.hljs-code').forEach(block => {
-                    let code = block.innerText.trim(); // Get content
-                    let language = '';
+       document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => { // Ensure highlightAll has finished
+            document.querySelectorAll('.hljs-code').forEach(block => {
+                let code = block.innerText.trim(); // Get content
+                let language = '';
 
-                    // Match language from the first line
-                    const match = code.match(/^```(\w+)/);
-                    if (match) {
-                        language = match[1]; // Extract language type
-                    }
+                // Match language from the first line
+                const match = code.match(/^```(\w+)/);
+                if (match) {
+                    language = match[1]; // Extract language type
+                }
 
-                    // If language matches, process further
-                    if (['js', 'javascript', 'json', 'go', 'css'].includes(language)) {
-                        // Split lines
-                        const lines = code.split('\n');
-                        if (lines.length < 2) {
-                            return; // Skip processing if not enough lines
-                        }
+                if (['js', 'javascript', 'json', 'go', 'css'].includes(language)) {
+                    const lines = code.split('\n');
+                    if (lines.length < 2) return;
 
-                        // Capture first and last lines
-                        const firstLine = lines.shift(); // Remove first line
-                        const lastLine = lines.pop();   // Remove last line
+                    const firstLine = lines.shift(); // Capture first line
+                    const lastLine = lines.pop();   // Capture last line
+                    const cleanedCode = lines.join('\n');
 
-                        // Update the inner content with processed code
-                        const cleanedCode = lines.join('\n');
-                        block.textContent = ''; // Clear the block
+                    block.textContent = ''; // Clear the block
 
-                        // Add back the first line with hljs-string styling
-                        const firstSpan = document.createElement('span');
-                        firstSpan.classList.add('hljs-string');
-                        firstSpan.textContent = firstLine + '\n';
-                        block.appendChild(firstSpan);
+                    const firstSpan = document.createElement('span');
+                    firstSpan.classList.add('hljs-comment');
+                    firstSpan.textContent = firstLine + '\n';
+                    block.appendChild(firstSpan);
 
-                        // Add the cleaned code
-                        const codeElement = document.createElement('code');
-                        codeElement.textContent = cleanedCode;
-                        block.appendChild(codeElement);
+                    const codeElement = document.createElement('code');
+                    codeElement.textContent = cleanedCode; // Insert cleaned code
+                    block.appendChild(codeElement);
 
-                        // Add back the last line with hljs-string styling
-                        const lastSpan = document.createElement('span');
-                        lastSpan.classList.add('hljs-string');
-                        lastSpan.textContent = '\n' + lastLine;
-                        block.appendChild(lastSpan);
+                    const lastSpan = document.createElement('span');
+                    lastSpan.classList.add('hljs-comment');
+                    lastSpan.textContent = '\n' + lastLine;
+                    block.appendChild(lastSpan);
 
-                        // Set language class dynamically
-                        block.classList.remove('hljs-code');
-                        block.classList.add(`language-${language}`);
+                    block.classList.remove('hljs-code');
+                    block.classList.add(`language-${language}`);
 
-                        // Re-highlight the cleaned block
-                        hljs.highlightElement(codeElement);
-                    }
-                });
-            }, 50); // Small delay to ensure initial highlighting completes
-        });
-    </script>
+                    // Re-highlight the cleaned block
+                    hljs.highlightElement(codeElement);
+
+                    // Replace the block's inner HTML while preserving first and last lines
+                    const highlightedInnerHTML = codeElement.innerHTML;
+                    block.innerHTML = `${firstSpan.outerHTML}${highlightedInnerHTML}${lastSpan.outerHTML}`;
+                }
+            });
+        }, 50);
+    });
+
+
+</script>
 </body>
 </html>
 {{end}}

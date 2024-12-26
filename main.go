@@ -13,14 +13,10 @@ import (
 )
 
 func main() {
-	// Check if an argument is provided
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: main.exe <docs-folder>")
-		os.Exit(1)
+	docsFolder := "Docs" // Default folder
+	if len(os.Args) > 1 {
+		docsFolder = os.Args[1] // Use provided folder if available
 	}
-
-	// Use the provided folder as input
-	docsFolder := os.Args[1]
 
 	info, err := os.Stat(docsFolder)
 	if os.IsNotExist(err) || !info.IsDir() {
